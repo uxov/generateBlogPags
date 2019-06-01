@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>获取请求者的 IP - 当使用 Nginx 反向代理时</title>
+
+    <link rel="stylesheet" href="../scripts/semantic.min.css">
+    <link rel="stylesheet" href="../scripts/github.css">
+    <link rel="stylesheet" href="../scripts/default.min.css">
+
+    <script src="../scripts/jquery.min.js"></script>
+    <script src="../scripts/semantic.min.js"></script>
+    <script src="../scripts/highlight.min.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #F0F0F0;
+        }
+
+        #aContentDiv {
+            height: 100%;
+            background-color: #fffaf3 !important;
+        }
+
+        .ui.comments{
+            max-width: 100%;
+        }
+
+        .comment .content a{
+            font-size: 22px;
+            color: gray;
+        }
+
+        img {
+            width: 100%;
+        }
+    </style>
+    <script>
+        $(function() {
+            getComments();
+        });
+
+        function openIndex() {
+            $("#showPost").load("../postList.html");
+        }
+
+        function getComments(){
+            var articleId = $('#articleId').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+                console.log(data);
+                for (var i = 0;i < data.length; i++) {
+                    addComment(data[i]);
+                }
+            },'json');
+        }
+
+        function commitComment() {
+            var comment = {};
+            comment.articleTitle = $('head title').text().trim();
+            comment.content = $('#content').val();
+            comment.userName = $('#userName').val();
+            comment.email = $('#email').val();
+            var jsonData = JSON.stringify(comment);
+            $.post('https://blogapi.tocu.me/blog/comment', {
+                'jsonData': jsonData
+            }, function(data) {
+                addComment(data);
+            }, 'json');
+        }
+
+        function addComment(comment){
+    	       var commentDiv = "<div class='comment'><div class='content'><a class='userName'>"+comment.userName
+    		         +"</a><div class='metadata'><span class='date'>"+comment.committedTime+"</span></div>"
+                     +"<div class='text'>"+comment.content+"</div></div></div>";
+               $('#commentList').append(commentDiv);
+        }
+
+        function message() {}
+    </script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+                <a href="../index.html">
+                    <button class="ui basic button" onclick="">
+                    <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+                </a>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"><p><em>2019-01-26</em></p>
+<h1>获取请求者的 IP - 当使用 Nginx 反向代理时</h1>
+<p>在 Java Web 应用中一般可以通过如下的代码来获取请求者的 IP：</p>
+<pre><code class="java">String ip = request.getRemoteAddr();
+</code></pre>
+
+<p>但当你的应用使用了 Nginx 反向代理后，上面的代码将不能获取请求者的 IP，获取到的 IP 为 Nginx 所在服务器的 IP。</p>
+<p>所以为了能获取到请求者的 IP，需要在 Nginx 的配置文件作以下设置：</p>
+<pre><code>server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    server_name www.test.me;
+
+    ssl_certificate /etc/letsencrypt/live/test.me/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/test.me/privkey.pem;
+
+    # settting for get visitor's IP address
+    set_real_ip_from 127.0.0.1;
+    real_ip_header X-Real-IP;
+    real_ip_recursive on;
+        
+    location / {
+        # settting for get visitor's IP address
+        proxy_set_header  Host $host;
+        proxy_set_header  X-Real-IP $remote_addr;
+        proxy_set_header  X-Forwarded-Proto https;
+        proxy_set_header  X-Forwarded-For $remote_addr;
+        proxy_set_header  X-Forwarded-Host $remote_addr;
+        proxy_pass        http://127.0.0.1:8088;
+    }
+}
+
+</code></pre>
+
+<p>最后在应用的代码中可以通过以下的方式来获取正确的 IP 地址：</p>
+<pre><code class="java">String ip = request().getHeader(&quot;X-Forwarded-For&quot;);
+</code></pre>
+
+<hr />
+<p><a href="https://calvin.me/forward-ip-addresses-when-using-nginx-proxy/" title="Forward IP Addresses with NGINX Proxy">Forward IP Addresses with NGINX Proxy</a></p></div>
+        </div>
+
+        <div id='commentList' class="ui comments">
+            <h3 class="ui dividing header">Comments</h3>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui small form">
+            <div class="field">
+                <textarea id='content' rows="5"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <input type="text" id='userName' placeholder="User Name">
+                </div>
+                <div class="field">
+                    <input type="text" id='email' placeholder="Email">
+                </div>
+            </div>
+            <div class="ui submit button" onclick="commitComment()">Add Reply</div>
+            <br /><br /><br />
+        </div>
+    </div>
+    <input type='hidden' id='articleId' value="71418eb9837f35273adda7b73384c0cb" />
+</body>
+
+</html>

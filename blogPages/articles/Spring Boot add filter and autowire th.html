@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>Spring Boot add filter and autowire th</title>
+
+    <link rel="stylesheet" href="../scripts/semantic.min.css">
+    <link rel="stylesheet" href="../scripts/github.css">
+    <link rel="stylesheet" href="../scripts/default.min.css">
+
+    <script src="../scripts/jquery.min.js"></script>
+    <script src="../scripts/semantic.min.js"></script>
+    <script src="../scripts/highlight.min.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #F0F0F0;
+        }
+
+        #aContentDiv {
+            height: 100%;
+            background-color: #fffaf3 !important;
+        }
+
+        .ui.comments{
+            max-width: 100%;
+        }
+
+        .comment .content a{
+            font-size: 22px;
+            color: gray;
+        }
+
+        img {
+            width: 100%;
+        }
+    </style>
+    <script>
+        $(function() {
+            getComments();
+        });
+
+        function openIndex() {
+            $("#showPost").load("../postList.html");
+        }
+
+        function getComments(){
+            var articleId = $('#articleId').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+                console.log(data);
+                for (var i = 0;i < data.length; i++) {
+                    addComment(data[i]);
+                }
+            },'json');
+        }
+
+        function commitComment() {
+            var comment = {};
+            comment.articleTitle = $('head title').text().trim();
+            comment.content = $('#content').val();
+            comment.userName = $('#userName').val();
+            comment.email = $('#email').val();
+            var jsonData = JSON.stringify(comment);
+            $.post('https://blogapi.tocu.me/blog/comment', {
+                'jsonData': jsonData
+            }, function(data) {
+                addComment(data);
+            }, 'json');
+        }
+
+        function addComment(comment){
+    	       var commentDiv = "<div class='comment'><div class='content'><a class='userName'>"+comment.userName
+    		         +"</a><div class='metadata'><span class='date'>"+comment.committedTime+"</span></div>"
+                     +"<div class='text'>"+comment.content+"</div></div></div>";
+               $('#commentList').append(commentDiv);
+        }
+
+        function message() {}
+    </script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+                <a href="../index.html">
+                    <button class="ui basic button" onclick="">
+                    <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+                </a>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"><p><em>2019-01-23</em></p>
+<h1>Spring Boot add filter and autowire the service</h1>
+<h2>1. Use @WebFilter annotation to add a filter.</h2>
+<pre><code class="java">import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+@WebFilter(urlPatterns = { &quot;/api/*&quot; })
+public class MyFilter implements Filter {
+    @Autowired
+    private MyService myService;
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+            
+    }
+
+    @Override
+    public void destroy() {
+    }
+
+}
+</code></pre>
+
+<h2>2. Then add @ServletComponentScan in main class to make @Autowired work in filter.</h2>
+<pre><code class="java">import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+
+@ServletComponentScan
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre></div>
+        </div>
+
+        <div id='commentList' class="ui comments">
+            <h3 class="ui dividing header">Comments</h3>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui small form">
+            <div class="field">
+                <textarea id='content' rows="5"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <input type="text" id='userName' placeholder="User Name">
+                </div>
+                <div class="field">
+                    <input type="text" id='email' placeholder="Email">
+                </div>
+            </div>
+            <div class="ui submit button" onclick="commitComment()">Add Reply</div>
+            <br /><br /><br />
+        </div>
+    </div>
+    <input type='hidden' id='articleId' value="3a98ee1c2d42c795b61f91b0086abead" />
+</body>
+
+</html>

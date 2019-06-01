@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>Nginx 配置二级域名及 Gogs 启用 Https</title>
+
+    <link rel="stylesheet" href="../scripts/semantic.min.css">
+    <link rel="stylesheet" href="../scripts/github.css">
+    <link rel="stylesheet" href="../scripts/default.min.css">
+
+    <script src="../scripts/jquery.min.js"></script>
+    <script src="../scripts/semantic.min.js"></script>
+    <script src="../scripts/highlight.min.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #F0F0F0;
+        }
+
+        #aContentDiv {
+            height: 100%;
+            background-color: #fffaf3 !important;
+        }
+
+        .ui.comments{
+            max-width: 100%;
+        }
+
+        .comment .content a{
+            font-size: 22px;
+            color: gray;
+        }
+
+        img {
+            width: 100%;
+        }
+    </style>
+    <script>
+        $(function() {
+            getComments();
+        });
+
+        function openIndex() {
+            $("#showPost").load("../postList.html");
+        }
+
+        function getComments(){
+            var articleId = $('#articleId').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+                console.log(data);
+                for (var i = 0;i < data.length; i++) {
+                    addComment(data[i]);
+                }
+            },'json');
+        }
+
+        function commitComment() {
+            var comment = {};
+            comment.articleTitle = $('head title').text().trim();
+            comment.content = $('#content').val();
+            comment.userName = $('#userName').val();
+            comment.email = $('#email').val();
+            var jsonData = JSON.stringify(comment);
+            $.post('https://blogapi.tocu.me/blog/comment', {
+                'jsonData': jsonData
+            }, function(data) {
+                addComment(data);
+            }, 'json');
+        }
+
+        function addComment(comment){
+    	       var commentDiv = "<div class='comment'><div class='content'><a class='userName'>"+comment.userName
+    		         +"</a><div class='metadata'><span class='date'>"+comment.committedTime+"</span></div>"
+                     +"<div class='text'>"+comment.content+"</div></div></div>";
+               $('#commentList').append(commentDiv);
+        }
+
+        function message() {}
+    </script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+                <a href="../index.html">
+                    <button class="ui basic button" onclick="">
+                    <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+                </a>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"><p><em>2018-05-16</em></p>
+<h1>Nginx 配置二级域名及Gogs启用Https</h1>
+<h2>生成证书包括二级域名</h2>
+<pre><code class="shell">certbot certonly --standalone -w -d test.com -d www.test.com -d gogs.test.com
+</code></pre>
+
+<h2>Nginx 配置文件示例</h2>
+<p>/etc/nginx/sites-available/server.conf</p>
+<pre><code>server {
+    listen 80;
+    server_name test.com www.test.com;
+
+    location / {
+        return 404;
+    }
+}
+
+
+server {
+    listen 80;
+    server_name gogs.test.com;
+
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name gogs.test.com;
+    ssl_certificate /etc/letsencrypt/live/test.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/test.com/privkey.pem;
+
+    client_max_body_size   20m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:3000;
+    }
+}
+</code></pre>
+
+<p>配置完后，重启服务后就可以用 https://gogs.test.com 访问了</p>
+<h2>提交到 Gogs 遇到的问题</h2>
+<h3>1、验证问题</h3>
+<p>fatal: unable to access 'http://gogs.test.com/tester/testRep.git/': SSL certificate problem: unable to get local issuer certificate</p>
+<p>解决方法：关闭验证</p>
+<pre><code class="shell">git config http.sslVerify false
+</code></pre>
+
+<h3>2、文件上传太大问题</h3>
+<p>Total 10 (delta 0), reused 0 (delta 0)
+error: RPC failed; HTTP 413 curl 22 The requested URL returned error: 413 Request Entity Too Large
+fatal: The remote end hung up unexpectedly
+fatal: The remote end hung up unexpectedly
+Everything up-to-date</p>
+<p>原因：Nginx 对上传文件的大小有限制</p>
+<p>解决方法：在 Nginx 的 server 配置文件中加上一句：</p>
+<pre><code>client_max_body_size   20m;
+</code></pre></div>
+        </div>
+
+        <div id='commentList' class="ui comments">
+            <h3 class="ui dividing header">Comments</h3>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui small form">
+            <div class="field">
+                <textarea id='content' rows="5"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <input type="text" id='userName' placeholder="User Name">
+                </div>
+                <div class="field">
+                    <input type="text" id='email' placeholder="Email">
+                </div>
+            </div>
+            <div class="ui submit button" onclick="commitComment()">Add Reply</div>
+            <br /><br /><br />
+        </div>
+    </div>
+    <input type='hidden' id='articleId' value="fda9b2b8548903635ae1a12d00a8fb2d" />
+</body>
+
+</html>

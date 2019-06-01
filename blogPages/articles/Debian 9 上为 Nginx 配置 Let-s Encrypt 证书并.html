@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>Debian 9 上为 Nginx 配置 Let-s Encrypt 证书并</title>
+
+    <link rel="stylesheet" href="../scripts/semantic.min.css">
+    <link rel="stylesheet" href="../scripts/github.css">
+    <link rel="stylesheet" href="../scripts/default.min.css">
+
+    <script src="../scripts/jquery.min.js"></script>
+    <script src="../scripts/semantic.min.js"></script>
+    <script src="../scripts/highlight.min.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #F0F0F0;
+        }
+
+        #aContentDiv {
+            height: 100%;
+            background-color: #fffaf3 !important;
+        }
+
+        .ui.comments{
+            max-width: 100%;
+        }
+
+        .comment .content a{
+            font-size: 22px;
+            color: gray;
+        }
+
+        img {
+            width: 100%;
+        }
+    </style>
+    <script>
+        $(function() {
+            getComments();
+        });
+
+        function openIndex() {
+            $("#showPost").load("../postList.html");
+        }
+
+        function getComments(){
+            var articleId = $('#articleId').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+                console.log(data);
+                for (var i = 0;i < data.length; i++) {
+                    addComment(data[i]);
+                }
+            },'json');
+        }
+
+        function commitComment() {
+            var comment = {};
+            comment.articleTitle = $('head title').text().trim();
+            comment.content = $('#content').val();
+            comment.userName = $('#userName').val();
+            comment.email = $('#email').val();
+            var jsonData = JSON.stringify(comment);
+            $.post('https://blogapi.tocu.me/blog/comment', {
+                'jsonData': jsonData
+            }, function(data) {
+                addComment(data);
+            }, 'json');
+        }
+
+        function addComment(comment){
+    	       var commentDiv = "<div class='comment'><div class='content'><a class='userName'>"+comment.userName
+    		         +"</a><div class='metadata'><span class='date'>"+comment.committedTime+"</span></div>"
+                     +"<div class='text'>"+comment.content+"</div></div></div>";
+               $('#commentList').append(commentDiv);
+        }
+
+        function message() {}
+    </script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+                <a href="../index.html">
+                    <button class="ui basic button" onclick="">
+                    <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+                </a>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"><p><em>2018-05-12</em></p>
+<h1>Debian 9 上为 Nginx 配置 Let's Encrypt 证书并强制 Https 访问</h1>
+<p>环境：Debian 9
+域名：tester.com（非真实，示例用）
+应用：自建的静态页面博客，放在 /var/www/myBlog 目录下。</p>
+<hr />
+<h2>使用工具 certbot 来生成 Let's Encrpyt 证书</h2>
+<h3>安装 certbot</h3>
+<pre><code class="shell"> apt install certbot
+</code></pre>
+
+<h3>生成证书</h3>
+<p>这过程中会让你输入邮箱地址，按照提示一步步操作就行了，最后会列出生成证书的路径及有效期。</p>
+<pre><code class="shell">root@Debian:~# certbot certonly --webroot -w /var/www/myBlog/ -d tester.com -d www.tester.com
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Enter email address (used for urgent renewal and security notices) (Enter 'c' to
+cancel):tester@gmail.com
+
+-------------------------------------------------------------------------------
+Please read the Terms of Service at
+https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf. You must
+agree in order to register with the ACME server at
+https://acme-v01.api.letsencrypt.org/directory
+-------------------------------------------------------------------------------
+(A)gree/(C)ancel: A
+Obtaining a new certificate
+Performing the following challenges:
+http-01 challenge for tester.com
+http-01 challenge for www.tester.com
+Using the webroot path /var/www/myBlog for all unmatched domains.
+Waiting for verification...
+Cleaning up challenges
+Generating key (2048 bits): /etc/letsencrypt/keys/0000_key-certbot.pem
+Creating CSR: /etc/letsencrypt/csr/0000_csr-certbot.pem
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at
+   /etc/letsencrypt/live/tester.com/fullchain.pem. Your cert will expire
+   on 2018-08-10. To obtain a new or tweaked version of this
+   certificate in the future, simply run certbot again. To
+   non-interactively renew *all* of your certificates, run &quot;certbot
+   renew&quot;
+ - If you lose your account credentials, you can recover through
+   e-mails sent to tester@gmail.com.
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+
+root@Debian:~#
+</code></pre>
+
+<h3>配置 Nginx 服务</h3>
+<p>我博客网站的服务文件 myBlog.conf，在 /etc/nginx/sites-available 目录下，内容如下：</p>
+<pre><code>server {
+    listen 80;
+    server_name tester.com www.tester.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+
+    server_name tester.com www.tester.com;
+
+    ssl_certificate /etc/letsencrypt/live/tester.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tester.com/privkey.pem;
+
+    root /var/www/myBlog;
+    index index.html;
+}
+</code></pre>
+
+<p>- /etc/letsencrypt/live/tester.com/cert.pem 和 /etc/letsencrypt/live/tester.com/privkey.pem 是证书的生成路径</p>
+<p>- 这里利用 <code>return 301 https://$server_name$request_uri;</code> 来强制 Https 访问，将来自 Http 的访问转发到 Https 上。</p>
+<h3>重新加载服务</h3>
+<pre><code class="shell">systemctl reload nginx
+</code></pre>
+
+<h3>验证</h3>
+<p>访问
+tester.com
+www.tester.com
+都会跳转到 <code>https://tester.com</code></p>
+<hr />
+<h3>更新证书</h3>
+<p>Let's encrpyt 证书默认有效期为 3 个月，所以为了避免手工更新，可以添加定时任务来实现自动更新。</p>
+<h4>添加定时任务</h4>
+<pre><code class="shell">crontab -e
+</code></pre>
+
+<p></br>
+内容如下：</p>
+<pre><code># 每周一凌晨两点更新证书将日志写入“/var/log/letsencrypt.log”并重启 Nginx 服务
+0 2 * * 1 certbot renew &gt;&gt; /var/log/letsencrypt.log --post-hook &quot;systemctl reload nginx&quot;
+</code></pre>
+
+<hr />
+<p>关于网站如何启用 Https（不同系统不同服务器）的资料介绍，可以看一下这里：
+<a href="https://certbot.eff.org" title="Certbot">Certbot</a></p></div>
+        </div>
+
+        <div id='commentList' class="ui comments">
+            <h3 class="ui dividing header">Comments</h3>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui small form">
+            <div class="field">
+                <textarea id='content' rows="5"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <input type="text" id='userName' placeholder="User Name">
+                </div>
+                <div class="field">
+                    <input type="text" id='email' placeholder="Email">
+                </div>
+            </div>
+            <div class="ui submit button" onclick="commitComment()">Add Reply</div>
+            <br /><br /><br />
+        </div>
+    </div>
+    <input type='hidden' id='articleId' value="c7b096b699dcb063a4621a62ac429058" />
+</body>
+
+</html>

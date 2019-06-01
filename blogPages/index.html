@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>Blog Index</title>
+
+    <link rel="stylesheet" type="text/css" href="scripts/semantic.min.css">
+
+    <script src="scripts/jquery.min.js"></script>
+    <script src="scripts/semantic.min.js"></script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #f2f2f2;
+        }
+        #aContentDiv {
+            height:100%;
+            background-color: #fffaf3 !important;
+        }
+
+    </style>
+	<script>
+    	$(function() {
+    	    $("#showPost").load("postList.html");
+    	});
+
+	</script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+                <button class="ui basic button">
+                    <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"></div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>自动更新博客 - 利用 Github 的 Webhook</title>
+
+    <link rel="stylesheet" href="../scripts/semantic.min.css">
+    <link rel="stylesheet" href="../scripts/github.css">
+    <link rel="stylesheet" href="../scripts/default.min.css">
+
+    <script src="../scripts/jquery.min.js"></script>
+    <script src="../scripts/semantic.min.js"></script>
+    <script src="../scripts/highlight.min.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #F0F0F0;
+        }
+
+        #aContentDiv {
+            height: 100%;
+            background-color: #fffaf3 !important;
+        }
+
+        .ui.comments{
+            max-width: 100%;
+        }
+
+        .comment .content a{
+            font-size: 22px;
+            color: gray;
+        }
+
+        img {
+            width: 100%;
+        }
+    </style>
+    <script>
+        $(function() {
+            getComments();
+        });
+
+        function openIndex() {
+            $("#showPost").load("../postList.html");
+        }
+
+        function getComments(){
+            var articleId = $('#articleId').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+                console.log(data);
+                for (var i = 0;i < data.length; i++) {
+                    addComment(data[i]);
+                }
+            },'json');
+        }
+
+        function commitComment() {
+            var comment = {};
+            comment.articleTitle = $('head title').text().trim();
+            comment.content = $('#content').val();
+            comment.userName = $('#userName').val();
+            comment.email = $('#email').val();
+            var jsonData = JSON.stringify(comment);
+            $.post('https://blogapi.tocu.me/blog/comment', {
+                'jsonData': jsonData
+            }, function(data) {
+                addComment(data);
+            }, 'json');
+        }
+
+        function addComment(comment){
+    	       var commentDiv = "<div class='comment'><div class='content'><a class='userName'>"+comment.userName
+    		         +"</a><div class='metadata'><span class='date'>"+comment.committedTime+"</span></div>"
+                     +"<div class='text'>"+comment.content+"</div></div></div>";
+               $('#commentList').append(commentDiv);
+        }
+
+        function message() {}
+    </script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+                <a href="../index.html">
+                    <button class="ui basic button" onclick="">
+                    <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+                </a>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"><p>2018-05-10</p>
+<h1>自动更新博客 - 利用 Github 的 Webhooks</h1>
+<h2>说明</h2>
+<p>Webhooks 允许你在 Github 上订阅确定的事件（pull/push 等操作事件），当 Github 上发生了相关的事件时，会向你指定 URL 发送消息（HTTP POST）。所以我们可以通过监听来自 Github 的事件来触发相关操作。比如，当 Github 上的项目有更新时，在我们的服务器上触发脚本执行，从 Github 上拉取最新文件立即更新网站，甚至直接拉取最新代码，在服务器上自动构建，运行最新版本的应用。</p>
+<p>博客自动更新原理：当将博客最新内容推送到 Github 上后，Github 会发送消息给服务器，服务器收到消息后立即从 Github 拉取最新页面以达到及时更新博客的目的。</p>
+<hr />
+<h2>分析</h2>
+<p>我现有的条件：
+- 博客内容已经托管在 Github上。
+- 一台 VPS，运行着自建的博客。</p>
+<p>还需要做的事：
+1. 创建脚本文件（从 Github 上拉取网页）。
+2. 在服务器创建服务，监听来自 Github 的消息，收到消息后立即执行脚本。
+3. 在 Github 项目（托管的博客内容）上配置好 Webhooks。</p>
+<hr />
+<h2>步骤</h2>
+<p>VPS 服务器环境：Debian 9</p>
+<h3>1、创建脚本文件</h3>
+<p>简单，只实现拉取最新文件功能。“/var/www/blogPages”是博客文件目录。
+updatePages.sh</p>
+<pre><code class="shell">#! /bin/bash
+
+cd /var/www/blogPages
+git pull origin master
+</code></pre>
+
+<h3>2、创建服务</h3>
+<p>可以根据自己的喜好，利用 Python、Ruby、PHP等工具来创建服务，这里是用 Nodejs 来实现。</p>
+<h4>a、安装软件环境</h4>
+<pre><code class="shell">apt update
+curl -sL https://deb.nodesource.com/setup_10.x | bash -
+apt install -y nodejs
+npm install github-webhook-handler
+npm install -g forever
+</code></pre>
+
+<p>- 为了方便直接采用了第三方库：github-webhook-handler 来处理来自 Github 的相关请求。
+- 因为在 server.js 中使用 require 形式，所以不能全局安装 github-webhook-handler（带参数 -g），否则会报错。
+- forever 用来管理 Nodejs 服务，可以使应用在后台运行。</p>
+<h4>b、创建运行文件：server.js，内容如下：</h4>
+<pre><code class="js">var http = require('http')
+var spawn = require('child_process').spawn
+var createHandler = require('github-webhook-handler')
+var handler = createHandler({
+    path: '/',
+    secret: 'kjekljt03w6535'    //这里是随机字符串，与 Github 上的配置保持一致
+})
+
+function runCommand(cmd, args, callback) {
+    var child = spawn(cmd, args)
+    var response = ''
+    child.stdout.on('data', function(buffer) {
+        response += buffer.toString()
+    })
+    child.stdout.on('end', function() {
+        callback(response)
+    })
+}
+
+http.createServer(function(req, res) {
+    handler(req, res, function(err) {
+        res.statusCode = 404
+        res.end('no such location')
+    })
+}).listen(9746)
+
+handler.on('error', function(err) {
+    console.error('Error:', err.message)
+})
+
+handler.on('push', function(event) {
+    console.log('Received a push event for %s to %s',
+        event.payload.repository.name,
+        event.payload.ref)
+
+    runCommand('sh', ['./updatePages.sh'], function(txt) {
+        console.log(txt)
+    });
+
+})
+</code></pre>
+
+<h4>c、运行</h4>
+<pre><code class="shell">forever start server.js
+</code></pre>
+
+<h3>3、配置 Webhooks</h3>
+<p>主要配置 Payload URL 和 secret（与 server.js 中的 secret 保持一致）
+<img alt="" src="../images/de11260d-5e03-493b-92f5-e6d8339ab12e.png" /></p>
+<h3>4、验证</h3>
+<p>配置 Webhooks 后，在相同的页面里点击“Redeliver”按钮测试一下。
+<img alt="" src="../images/d6f27b37-4c46-42a3-a2c4-ff06af7376a6.png" />
+</br>
+然后就可以往 Github 项目推送更新，验证一下。</p>
+<hr />
+<p>参考：
+<a href="https://developer.github.com/webhooks/#webhooks" title="Github Webhooks">Github Webhooks</a>
+<a href="https://github.com/rvagg/github-webhook-handler" title="github-webhook-handler">github-webhook-handler</a></p></div>
+        </div>
+
+        <div id='commentList' class="ui comments">
+            <h3 class="ui dividing header">Comments</h3>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui small form">
+            <div class="field">
+                <textarea id='content' rows="5"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <input type="text" id='userName' placeholder="User Name">
+                </div>
+                <div class="field">
+                    <input type="text" id='email' placeholder="Email">
+                </div>
+            </div>
+            <div class="ui submit button" onclick="commitComment()">Add Reply</div>
+            <br /><br /><br />
+        </div>
+    </div>
+    <input type='hidden' id='articleId' value="e1d1b6bbd461370b70029ddadf588e46" />
+</body>
+
+</html>
