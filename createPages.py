@@ -1,5 +1,6 @@
 import os
 import json
+import random
 import hashlib
 import markdown
 from urllib import parse
@@ -63,7 +64,7 @@ def create_post_list_html():
 	title_html = ''
 	postList_html = ''
 	title_list_html = ''
-	title_html_template = "<div class='item'><div class='content'><lable class='dtLable'>[date]</lable>&nbsp;&nbsp;&nbsp;&nbsp;<a href='articles/[encodeTitle].html'>[title]</a></div></div>"
+	title_html_template = "<div class='item'><div class='content'><lable class='dtLable'>[date]</lable>&nbsp;&nbsp;&nbsp;&nbsp;<a href='articles/[encodeTitle].html?n=[randomNum]'>[title]</a></div></div>"
 
 	with open('blogPages/titles.json', encoding="utf8") as json_f:
 		json_data = json.load(json_f)
@@ -71,13 +72,14 @@ def create_post_list_html():
 
 	title_list.reverse()
 	for item in json_data :
-	    date = item['date']
-	    title = item['title']
-	    encodeTitle = parse.quote(title)
-	    title_html = title_html_template.replace('[date]',date)
-	    title_html = title_html.replace('[title]',title)
-	    title_html = title_html.replace('[encodeTitle]',encodeTitle)
-	    title_list_html += title_html
+		date = item['date']
+		title = item['title']
+		encodeTitle = parse.quote(title)
+		title_html = title_html_template.replace('[date]',date)
+		title_html = title_html.replace('[title]',title)
+		title_html = title_html.replace('[encodeTitle]',encodeTitle)
+		title_html = title_html.replace('[randomNum]',str(random.random()))
+		title_list_html += title_html
 
 	with open('template/postListTemplate.html',encoding="utf8") as t_f:
 	    postList_html = t_f.read()
