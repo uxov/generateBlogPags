@@ -83,7 +83,11 @@
             $.post('https://blogapi.tocu.me/blog/comment', {
                 'jsonData': jsonData
             }, function(data) {
-                addComment(data);
+                if (data.result) {
+                    alert("Can't add more comments!");
+                    return;
+                }
+                addComment(data.result.comment);
             }, 'json');
         }
 
