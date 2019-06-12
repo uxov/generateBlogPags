@@ -83,7 +83,7 @@
             $.post('https://blogapi.tocu.me/blog/comment', {
                 'jsonData': jsonData
             }, function(data) {
-                if (data.result) {
+                if ($.isEmptyObject(data.result)) {
                     alert("Can't add more comments!");
                     return;
                 }
