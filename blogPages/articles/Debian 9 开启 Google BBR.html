@@ -66,6 +66,15 @@
             comment.content = $('#content').val();
             comment.userName = $('#userName').val();
             comment.email = $('#email').val();
+            if (comment.userName.trim() == '') {
+                alert('Please write your user name.');
+            }
+            if (comment.email.trim() == '') {
+                alert('Please leave your email.');
+            }
+            if (comment.userName.trim() == '') {
+                alert("The comment can't be empty.");
+            }
             var jsonData = JSON.stringify(comment);
             $.post('https://blogapi.tocu.me/blog/comment', {
                 'jsonData': jsonData
