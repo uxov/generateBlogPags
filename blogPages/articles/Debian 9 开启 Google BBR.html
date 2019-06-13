@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -152,6 +153,7 @@ tcp_bbr                16384  3
         </div>
     </div>
     <input type='hidden' id='articleId' value="5e51a85b57910e17ee63bf01524269cc" />
+    <input type='hidden' id='articleTitle' value="Debian 9 开启 Google BBR" />
 </body>
 
 </html>

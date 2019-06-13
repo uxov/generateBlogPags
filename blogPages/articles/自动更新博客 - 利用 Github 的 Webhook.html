@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -234,6 +235,7 @@ handler.on('push', function(event) {
         </div>
     </div>
     <input type='hidden' id='articleId' value="e1d1b6bbd461370b70029ddadf588e46" />
+    <input type='hidden' id='articleTitle' value="自动更新博客 - 利用 Github 的 Webhook" />
 </body>
 
 </html>

@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -193,6 +194,7 @@ Everything up-to-date</p>
         </div>
     </div>
     <input type='hidden' id='articleId' value="fda9b2b8548903635ae1a12d00a8fb2d" />
+    <input type='hidden' id='articleTitle' value="Nginx 配置二级域名及 Gogs 启用 Https" />
 </body>
 
 </html>

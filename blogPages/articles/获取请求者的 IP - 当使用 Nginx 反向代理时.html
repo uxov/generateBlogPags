@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -177,6 +178,7 @@
         </div>
     </div>
     <input type='hidden' id='articleId' value="71418eb9837f35273adda7b73384c0cb" />
+    <input type='hidden' id='articleTitle' value="获取请求者的 IP - 当使用 Nginx 反向代理时" />
 </body>
 
 </html>

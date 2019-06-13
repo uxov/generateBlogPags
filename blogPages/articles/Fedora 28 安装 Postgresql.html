@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -186,6 +187,7 @@ psql
         </div>
     </div>
     <input type='hidden' id='articleId' value="8e563ee6a6d1a201f2d0ec765509b82b" />
+    <input type='hidden' id='articleTitle' value="Fedora 28 安装 Postgresql" />
 </body>
 
 </html>

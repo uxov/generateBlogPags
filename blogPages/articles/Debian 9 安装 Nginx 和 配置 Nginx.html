@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -217,6 +218,7 @@ rm default
         </div>
     </div>
     <input type='hidden' id='articleId' value="6c2dbf6e2c31cc95fe6d5cfb781847d8" />
+    <input type='hidden' id='articleTitle' value="Debian 9 安装 Nginx 和 配置 Nginx" />
 </body>
 
 </html>

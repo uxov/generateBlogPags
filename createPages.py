@@ -38,6 +38,7 @@ def convert_md_to_blog_html():
 		article_html = article_html.replace('[title]', title)
 		articleId = hashlib.md5(title.encode("utf-8")).hexdigest()
 		article_html = article_html.replace('[articleId]', articleId)
+		article_html = article_html.replace('[articleTitle]', title)
 		new_html_file = open('blogPages/articles/' + title + '.html','wb+')
 		new_html_file.write(bytes(article_html,'utf8'))
 		new_html_file.close()

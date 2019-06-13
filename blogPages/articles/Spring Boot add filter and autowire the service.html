@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width initial-scale=1'>
-    <title>利用 Github 自建 Maven 仓库并使用 Gradle 发布</title>
+    <title>Spring Boot add filter and autowire the service</title>
 
     <link rel="stylesheet" href="../scripts/semantic.min.css">
     <link rel="stylesheet" href="../scripts/github.css">
@@ -114,70 +114,57 @@
                 </a>
             </div>
             <div class="ui divider"></div>
-            <div id="showPost"><p><em>2019-01-13</em></p>
-<h1>利用 Github 自建 Maven 仓库并使用 Gradle 发布 Jar 包</h1>
-<p>原理：将项目打包成 Jar 发布到本地仓库后，本地仓库与 Github 的 repository 进行同步，然后其他项目就可以通过 Github 的 URL 对 发布 Jar 包进行引用。</p>
-<h2>1、配置要发布 Jar 包项目的 build.gradle 文件：</h2>
-<pre><code>apply plugin: 'java'
-apply plugin: &quot;maven-publish&quot;
+            <div id="showPost"><p><em>2019-01-23</em></p>
+<h1>Spring Boot add filter and autowire the service</h1>
+<h2>1. Use @WebFilter annotation to add a filter.</h2>
+<pre><code class="java">import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletResponse;
 
-repositories {
-    mavenLocal()
-    jcenter()
-}
+import org.springframework.beans.factory.annotation.Autowired;
 
-dependencies {
-    compile 'junit:junit:+'
-    compile 'com.google.code.gson:gson:+'
-}
+@WebFilter(urlPatterns = { &quot;/api/*&quot; })
+public class MyFilter implements Filter {
+    @Autowired
+    private MyService myService;
 
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
 
-//publish jar setting,use 'gradle publish' command
-//package source files
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier &quot;sources&quot;
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-
-            artifact sourceJar
-
-            groupId 'io.github.username.jlib'
-            artifactId 'util'
-            version '0.1'
-        }
     }
 
-    repositories {
-        //mavenLocal()
-        maven { url 'file:///home/mike/maven-repo' }    //local repository
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+            
     }
+
+    @Override
+    public void destroy() {
+    }
+
 }
 </code></pre>
 
-<h2>2、在本地新建一个 maven-repo 目录，如 /home/mike/maven-repo ，作为与 Github 同步的本地仓库。</h2>
-<h2>3、在命令行里进入要发布 Jar 包项目的目录里，运行发布的命令：</h2>
-<pre><code class="shell">gradle clean
-gradle build
-gradle publish
-</code></pre>
+<h2>2. Then add @ServletComponentScan in main class to make @Autowired work in filter.</h2>
+<pre><code class="java">import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 
-<h2>4、登录 Github 新建一个 repository 并与本地的仓库 maven-repo 进行同步。</h2>
-<h2>5、在其他的项目里引用发布的 Jar 包</h2>
-<h3>a、在 gradle.build 文件中的 repositories 加入</h3>
-<pre><code>maven {url https://raw.githubusercontent.com/username/maven-repo/master}
-</code></pre>
+@ServletComponentScan
+@SpringBootApplication
+public class Application {
 
-<h3>b、并在 dependencies 加入</h3>
-<pre><code>compile 'io.github.username.jlib:util:0.1'
-</code></pre>
-
-<h2></h2>
-<p><a href="https://www.jianshu.com/p/0629548ab5a4" title="如何发布jar/aar到本地仓库">如何发布jar/aar到本地仓库</a></p></div>
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre></div>
         </div>
 
         <div id='commentList' class="ui comments">
@@ -200,8 +187,8 @@ gradle publish
             <br /><br /><br />
         </div>
     </div>
-    <input type='hidden' id='articleId' value="702495b2739e71eb4ab6bdef2d7f2c8d" />
-    <input type='hidden' id='articleTitle' value="利用 Github 自建 Maven 仓库并使用 Gradle 发布" />
+    <input type='hidden' id='articleId' value="6bbdce48846a7f8d5ca65beb644a55f2" />
+    <input type='hidden' id='articleTitle' value="Spring Boot add filter and autowire the service" />
 </body>
 
 </html>

@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -282,6 +283,7 @@ public class RSAUtil {
         </div>
     </div>
     <input type='hidden' id='articleId' value="211318d17a94bbd653d3e8b77ed58ac6" />
+    <input type='hidden' id='articleTitle' value="登录信息加密" />
 </body>
 
 </html>

@@ -52,7 +52,8 @@
 
         function getComments(){
             var articleId = $('#articleId').val();
-            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{},function(data){
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -137,6 +138,7 @@
         </div>
     </div>
     <input type='hidden' id='articleId' value="[articleId]" />
+    <input type='hidden' id='articleTitle' value="[articleTitle]" />
 </body>
 
 </html>
