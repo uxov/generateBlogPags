@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 title_list = []
 md_files_path = 'mdFiles/'
+img_path_in_md_file = 'index_files/'
 
 def main():
 	convert_md_to_blog_html()
@@ -24,6 +25,8 @@ def convert_md_to_blog_html():
 	f.close()
 
 	for file in os.listdir(md_files_path) :
+		if file == 'images' :
+			continue
 		date = file[:9]
 		title_list.append(file)
 		with open(md_files_path + file,encoding="utf8") as t_f:
@@ -31,7 +34,7 @@ def convert_md_to_blog_html():
 			html_text = markdown.markdown(md_text,['fenced_code'])
 		t_f.close()
 
-		html_text = html_text.replace('index_files/', '../images/')
+		html_text = html_text.replace(img_path_in_md_file, '../images/')
 		article_html = template_html.replace('[articleHtml]', html_text)
 		index = file.find('.')
 		title = file[11:index]

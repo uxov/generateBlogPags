@@ -16,26 +16,34 @@
             padding: 0 !important;
             background: #f2f2f2;
         }
+
         #aContentDiv {
-            height:100%;
+            height: 100%;
             background-color: #fffaf3 !important;
         }
-
     </style>
-	<script>
-    	$(function() {
-    	    $("#showPost").load("postList.html?n="+Math.random());
-    	});
-
-	</script>
+    <script>
+        $(function() {
+            $("#showPost").load("postList.html?n=" + Math.random());
+            $('#listBut').click(function() {
+                $("#showPost").load("postList.html?n=" + Math.random());
+            });
+            $('#aboutBut').click(function() {
+                $("#showPost").load("about.html?n=" + Math.random());
+            });
+        });
+    </script>
 </head>
 
 <body>
     <div class="ui container">
         <div class="ui raised segment" id='aContentDiv'>
             <div>
-                <button class="ui basic button">
+                <button id='listBut' class="ui basic button">
                     <b style="color:#4183c4;font-size:20px">List</b>
+                </button>
+                <button id='aboutBut' class="ui basic button right floated">
+                    <b style="color:#4183c4;font-size:20px">About</b>
                 </button>
             </div>
             <div class="ui divider"></div>
