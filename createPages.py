@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import random
 import hashlib
 import markdown
@@ -15,6 +16,7 @@ def main():
 	convert_md_to_blog_html()
 	create_title_json()
 	create_post_list_html()
+	shutil.copyfile('template/about.html', 'blogPages/about.html');
 
 def convert_md_to_blog_html():
 	md_text = ''
@@ -31,7 +33,7 @@ def convert_md_to_blog_html():
 		title_list.append(file)
 		with open(md_files_path + file,encoding="utf8") as t_f:
 			md_text = t_f.read()
-			html_text = markdown.markdown(md_text,['fenced_code'])
+			html_text = markdown.markdown(md_text,extensions=['fenced_code'])
 		t_f.close()
 
 		html_text = html_text.replace(img_path_in_md_file, '../images/')
@@ -90,6 +92,15 @@ def create_post_list_html():
 	t_f.close()
 	postList_html = postList_html.replace('[titleList]',title_list_html)
 	new_html_file = open('blogPages/postList.html','wb+')
+	new_html_file.write(bytes(postList_html,'utf8'))
+	new_html_file.close()
+
+
+	with open('template/index.html',encoding="utf8") as t_f:
+	    postList_html = t_f.read()
+	t_f.close()
+	postList_html = postList_html.replace('[titleList]',title_list_html)
+	new_html_file = open('blogPages/index.html','wb+')
 	new_html_file.write(bytes(postList_html,'utf8'))
 	new_html_file.close()
 

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>Simplify Spring Data JPA Query Example - Dynamic Query And Selecting Specific Columns</title>
+
+    <link rel="stylesheet" href="../scripts/semantic.min.css">
+    <link rel="stylesheet" href="../scripts/github.css">
+    <link rel="stylesheet" href="../scripts/default.min.css">
+	<link rel="stylesheet" href="../scripts/index.css">
+
+    <script src="../scripts/jquery.min.js"></script>
+    <script src="../scripts/semantic.min.js"></script>
+    <script src="../scripts/highlight.min.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+    <style>
+        body {
+            padding: 0 !important;
+            background: #e8e8e8;
+        }
+
+        #aContentDiv {
+            height: 100%;
+            background-color: #FDF6E8 !important;
+        }
+
+        .ui.comments{
+            max-width: 100%;
+        }
+
+        .comment .content a{
+            font-size: 22px;
+            color: gray;
+        }
+
+        img {
+            width: 100%;
+        }
+
+		.menuFontSize{
+			font-size: 1.42857143rem !important;
+		}
+
+		.menuFontColor{
+			color:#4183c4 !important;
+		}
+    </style>
+    <script>
+        $(function() {
+            getComments();
+        });
+
+        function openIndex() {
+            $("#showPost").load("../postList.html");
+        }
+
+        function getComments(){
+            var articleId = $('#articleId').val();
+            var articleTitle = $('#articleTitle').val();
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
+                console.log(data);
+                var comments = data.result.comments;
+                for (var i = 0;i < comments.length; i++) {
+                    addComment(comments[i]);
+                }
+            },'json');
+        }
+
+        function commitComment() {
+            var comment = {};
+            comment.articleTitle = $('head title').text().trim();
+            comment.content = $('#content').val();
+            comment.userName = $('#userName').val();
+            comment.email = $('#email').val();
+            if (comment.userName.trim() == '') {
+                alert('Please write your user name.');
+                return;
+            }
+            if (comment.email.trim() == '') {
+                alert('Please leave your email.');
+                return;
+            }
+            if (comment.userName.trim() == '') {
+                alert("The comment can't be empty.");
+                return;
+            }
+            var jsonData = JSON.stringify(comment);
+            $.post('https://blogapi.tocu.me/blog/comment', {
+                'jsonData': jsonData
+            }, function(data) {
+                if ($.isEmptyObject(data.result)) {
+                    alert("Can't add more comments!");
+                    return;
+                }
+                addComment(data.result.comment);
+            }, 'json');
+        }
+
+        function addComment(comment){
+    	       var commentDiv = "<div class='comment'><div class='content'><a class='userName'>"+comment.userName
+    		         +"</a><div class='metadata'><span class='date'>"+comment.committedTime+"</span></div>"
+                     +"<div class='text'>"+comment.content+"</div></div></div>";
+               $('#commentList').append(commentDiv);
+        }
+
+        function message() {}
+    </script>
+</head>
+
+<body>
+    <div class="ui container">
+        <div class="ui raised segment" id='aContentDiv'>
+            <div>
+				<a href="../index.html" class="ui basic">
+                    <div class="ui label menuFontSize menuFontColor" >
+                        List
+                    </div>
+                </a>
+            </div>
+            <div class="ui divider"></div>
+            <div id="showPost"><p><em>2019-08-12</em></p>
+<h1>Simplify Spring Data JPA Query Example - Dynamic Query And Selecting Specific Columns</h1>
+<p>Source code : <a href="https://github.com/uxov/spring-data-jpa-simplify-query-example">https://github.com/uxov/spring-data-jpa-simplify-query-example</a></p>
+<h2>Usage</h2>
+<pre><code class="java">package xyz.defe.springDataJpa.test;
+
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import com.google.gson.Gson;
+
+import xyz.defe.springDataJpa.entity.User;
+import xyz.defe.springDataJpa.repository.UserRepository;
+import xyz.defe.springDataJpa.simplifyQuery.Condition;
+import xyz.defe.springDataJpa.simplifyQuery.EntityQuery;
+import xyz.defe.springDataJpa.simplifyQuery.NormalQuery;
+import xyz.defe.springDataJpa.simplifyQuery.SelectQuery;
+
+@SpringBootTest
+public class SimplifyQueryTest {
+    @Autowired
+    private Gson gson;
+    @Autowired
+    private UserRepository userRepo;
+    @Autowired
+    private EntityQuery entityQuery;
+
+    private int pageNum = 1;
+    private int  pageSize = 3;
+
+    @Test
+    public void testSelectQuery() throws Exception {
+        SelectQuery query = entityQuery.SelectQuery(User.class);
+        Condition c = query.getCondition();
+        Pageable page = PageRequest.of(pageNum - 1, pageSize, Sort.by(&quot;age&quot;).descending());
+        Page dataList = query.select(&quot;name&quot;, &quot;age&quot;).where(
+                c.greaterThan(&quot;age&quot;, 22),
+                c.greaterThanOrEqualTo(&quot;age&quot;, 25)).getResult(page);
+
+        System.out.println(&quot;testSelectQuery()'s result:&quot;);
+        System.out.println(&quot;count = &quot; + dataList.getTotalElements());
+        System.out.println(&quot;json = &quot; + gson.toJson(dataList.getContent()));
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectQuery2() throws Exception {
+        Integer age = 22;
+
+        SelectQuery query = entityQuery.SelectQuery(User.class);
+        Condition c = query.getCondition();
+        Pageable page = PageRequest.of(pageNum - 1, pageSize, Sort.by(&quot;age&quot;).descending());
+        query.select(&quot;name&quot;, &quot;age&quot;).where(
+                c.equal(&quot;sex&quot;, &quot;female&quot;));
+        if (age != null) {
+            query.getWhere().add(c.greaterThan(&quot;age&quot;, age));
+        }
+        Page dataList = query.getResult().getResult(page);
+
+        System.out.println(&quot;testSelectQuery2's result:&quot;);
+        System.out.println(&quot;count = &quot; + dataList.getTotalElements());
+        System.out.println(&quot;json = &quot; + gson.toJson(dataList.getContent()));
+        System.out.println();
+    }
+
+    @Test
+    public void testNormalQuery() {
+        NormalQuery query = entityQuery.NormalQuery(User.class);
+        Condition c = query.getCondition();
+        Pageable page = PageRequest.of(pageNum - 1, pageSize, Sort.by(&quot;age&quot;).descending());
+        Page dataList = query.select().where(
+                c.equal(&quot;sex&quot;, &quot;male&quot;),
+                c.greaterThan(&quot;age&quot;, 22)).getResult(page);
+
+        System.out.println(&quot;testNormalQuery()'s result:&quot;);
+        System.out.println(&quot;count = &quot; + dataList.getTotalElements());
+        System.out.println(&quot;json = &quot; + gson.toJson(dataList.getContent()));
+        System.out.println();
+    }
+
+    @Test
+    public void testNormalQuery2() {
+        Integer age = 22;
+
+        NormalQuery query = entityQuery.NormalQuery(User.class);
+        Condition c = query.getCondition();
+        Pageable page = PageRequest.of(pageNum - 1, pageSize, Sort.by(&quot;age&quot;).descending());
+        query.select().where(
+                c.equal(&quot;sex&quot;, &quot;female&quot;));
+        if (age != null) {
+            query.getWhere().add(c.greaterThan(&quot;age&quot;, age));
+        }
+        Page dataList = query.getResult().getResult(page);
+
+        System.out.println(&quot;testNormalQuery2()'s result:&quot;);
+        System.out.println(&quot;count = &quot; + dataList.getTotalElements());
+        System.out.println(&quot;json = &quot; + gson.toJson(dataList.getContent()));
+        System.out.println();
+    }
+
+    @BeforeEach
+    public void addUsers() {
+        userRepo.deleteAll();
+
+        User u1 = new User();
+        u1.setName(&quot;Jhon&quot;);
+        u1.setSex(&quot;male&quot;);
+        u1.setAge(25);
+        userRepo.save(u1);
+        User u2 = new User();
+        u2.setName(&quot;May&quot;);
+        u2.setSex(&quot;female&quot;);
+        u2.setAge(24);
+        userRepo.save(u2);
+        User u3 = new User();
+        u3.setName(&quot;Mike&quot;);
+        u3.setSex(&quot;male&quot;);
+        u3.setAge(27);
+        userRepo.save(u3);
+        User u4 = new User();
+        u4.setName(&quot;Helen&quot;);
+        u4.setSex(&quot;female&quot;);
+        u4.setAge(22);
+        userRepo.save(u4);
+        User u5 = new User();
+        u5.setName(&quot;Anne&quot;);
+        u5.setSex(&quot;female&quot;);
+        u5.setAge(23);
+        userRepo.save(u5);
+
+        List&lt;User&gt; list = userRepo.findAll();
+        assertEquals(5, list.size());
+    }
+}
+</code></pre>
+
+<p>Output:</p>
+<pre><code>testSelectQuery2's result:
+count = 2
+json = [{&quot;name&quot;:&quot;May&quot;,&quot;age&quot;:24},{&quot;name&quot;:&quot;Anne&quot;,&quot;age&quot;:23}]
+
+testNormalQuery()'s result:
+count = 2
+json = [{&quot;id&quot;:8,&quot;name&quot;:&quot;Mike&quot;,&quot;sex&quot;:&quot;male&quot;,&quot;age&quot;:27},{&quot;id&quot;:6,&quot;name&quot;:&quot;Jhon&quot;,&quot;sex&quot;:&quot;male&quot;,&quot;age&quot;:25}]
+
+testSelectQuery()'s result:
+count = 2
+json = [{&quot;name&quot;:&quot;Mike&quot;,&quot;age&quot;:27},{&quot;name&quot;:&quot;Jhon&quot;,&quot;age&quot;:25}]
+
+testNormalQuery2()'s result:
+count = 2
+json = [{&quot;id&quot;:17,&quot;name&quot;:&quot;May&quot;,&quot;sex&quot;:&quot;female&quot;,&quot;age&quot;:24},{&quot;id&quot;:20,&quot;name&quot;:&quot;Anne&quot;,&quot;sex&quot;:&quot;female&quot;,&quot;age&quot;:23}]
+</code></pre></div>
+        </div>
+
+        <div id='commentList' class="ui comments">
+            <h3 class="ui dividing header">Comments</h3>
+        </div>
+        <div class="ui divider"></div>
+        <div class="ui small form">
+            <div class="field">
+                <textarea id='content' rows="5"></textarea>
+            </div>
+            <div class="two fields">
+                <div class="field">
+                    <input type="text" id='userName' placeholder="User Name">
+                </div>
+                <div class="field">
+                    <input type="text" id='email' placeholder="Email">
+                </div>
+            </div>
+            <div class="ui submit button" onclick="commitComment()">Add Reply</div>
+            <br /><br /><br />
+        </div>
+    </div>
+    <input type='hidden' id='articleId' value="a8643f9fd0ea424c98aca6eab62ba11d" />
+    <input type='hidden' id='articleTitle' value="Simplify Spring Data JPA Query Example - Dynamic Query And Selecting Specific Columns" />
+</body>
+
+</html>

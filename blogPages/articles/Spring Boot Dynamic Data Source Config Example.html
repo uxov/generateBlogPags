@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../scripts/semantic.min.css">
     <link rel="stylesheet" href="../scripts/github.css">
     <link rel="stylesheet" href="../scripts/default.min.css">
+	<link rel="stylesheet" href="../scripts/index.css">
 
     <script src="../scripts/jquery.min.js"></script>
     <script src="../scripts/semantic.min.js"></script>
@@ -20,12 +21,12 @@
     <style>
         body {
             padding: 0 !important;
-            background: #F0F0F0;
+            background: #e8e8e8;
         }
 
         #aContentDiv {
             height: 100%;
-            background-color: #fffaf3 !important;
+            background-color: #FDF6E8 !important;
         }
 
         .ui.comments{
@@ -40,6 +41,14 @@
         img {
             width: 100%;
         }
+
+		.menuFontSize{
+			font-size: 1.42857143rem !important;
+		}
+
+		.menuFontColor{
+			color:#4183c4 !important;
+		}
     </style>
     <script>
         $(function() {
@@ -53,7 +62,7 @@
         function getComments(){
             var articleId = $('#articleId').val();
             var articleTitle = $('#articleTitle').val();
-            $.get('http://127.0.0.1:8011/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
+            $.get('https://blogapi.tocu.me/blog/comments/'+articleId,{articleTitle:articleTitle},function(data){
                 console.log(data);
                 var comments = data.result.comments;
                 for (var i = 0;i < comments.length; i++) {
@@ -81,7 +90,7 @@
                 return;
             }
             var jsonData = JSON.stringify(comment);
-            $.post('http://127.0.0.1:8011/blog/comment', {
+            $.post('https://blogapi.tocu.me/blog/comment', {
                 'jsonData': jsonData
             }, function(data) {
                 if ($.isEmptyObject(data.result)) {
@@ -107,10 +116,10 @@
     <div class="ui container">
         <div class="ui raised segment" id='aContentDiv'>
             <div>
-                <a href="../index.html">
-                    <button class="ui basic button" onclick="">
-                    <b style="color:#4183c4;font-size:20px">List</b>
-                </button>
+				<a href="../index.html" class="ui basic">
+                    <div class="ui label menuFontSize menuFontColor" >
+                        List
+                    </div>
                 </a>
             </div>
             <div class="ui divider"></div>

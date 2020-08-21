@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width initial-scale=1'>
-    <title>获取请求者的 IP - 当使用 Nginx 反向代理时</title>
+    <title>JavaFX Example</title>
 
     <link rel="stylesheet" href="../scripts/semantic.min.css">
     <link rel="stylesheet" href="../scripts/github.css">
@@ -123,47 +123,92 @@
                 </a>
             </div>
             <div class="ui divider"></div>
-            <div id="showPost"><p><em>2019-01-26</em></p>
-<h1>获取请求者的 IP - 当使用 Nginx 反向代理时</h1>
-<p>在 Java Web 应用中一般可以通过如下的代码来获取请求者的 IP：</p>
-<pre><code class="java">String ip = request.getRemoteAddr();
-</code></pre>
-
-<p>但当你的应用使用了 Nginx 反向代理后，上面的代码将不能获取请求者的 IP，获取到的 IP 为 Nginx 所在服务器的 IP。</p>
-<p>所以为了能获取到请求者的 IP，需要在 Nginx 的配置文件作以下设置：</p>
-<pre><code>server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-
-    server_name www.test.me;
-
-    ssl_certificate /etc/letsencrypt/live/test.me/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/test.me/privkey.pem;
-
-    # settting for get visitor's IP address
-    set_real_ip_from 127.0.0.1;
-    real_ip_header X-Real-IP;
-    real_ip_recursive on;
-        
-    location / {
-        # settting for get visitor's IP address
-        proxy_set_header  Host $host;
-        proxy_set_header  X-Real-IP $remote_addr;
-        proxy_set_header  X-Forwarded-Proto https;
-        proxy_set_header  X-Forwarded-For $remote_addr;
-        proxy_set_header  X-Forwarded-Host $remote_addr;
-        proxy_pass        http://127.0.0.1:8088;
-    }
+            <div id="showPost"><p><em>2020-01-05</em></p>
+<h1>JavaFX example</h1>
+<h2>create gradle project by Intellij Idea</h2>
+<p><img alt="" src="../images/Screenshot_20from_202020-01-05_2023-02-38.png" /></p>
+<h2>build.gradle</h2>
+<pre><code>plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
+javafx {
+    version = &quot;13&quot;
+    modules = [ 'javafx.controls' ]
+}
+
+group 'zyx.defe'
+version '1.0-SNAPSHOT'
+
+
+repositories {
+    //mavenCentral()
+    mavenLocal()
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+mainClassName = 'xyz.defe.pm.MainApp'
 </code></pre>
 
-<p>最后在应用的代码中可以通过以下的方式来获取正确的 IP 地址：</p>
-<pre><code class="java">String ip = request().getHeader(&quot;X-Forwarded-For&quot;);
+<h2>MainApp.java</h2>
+<pre><code class="java">package xyz.defe.pm;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.SplitPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+
+public class MainApp extends Application {
+
+    @Override
+    public void start(Stage stage) throws Exception {
+        stage.setTitle(&quot;JavaFX and Gradle&quot;);
+
+        MenuBar menuBar = new MenuBar();
+        Menu menu1 = new Menu(&quot;同步&quot;);
+        Menu menu2 = new Menu(&quot;导出&quot;);
+        menuBar.getMenus().add(menu1);
+        menuBar.getMenus().add(menu2);
+
+        SplitPane splitPane = new SplitPane();
+        splitPane.setPrefHeight(100);
+        VBox leftControl  = new VBox(new Label(&quot;Left Control&quot;));
+        VBox rightControl = new VBox(new Label(&quot;Right Control&quot;));
+        splitPane.getItems().addAll(leftControl, rightControl);
+
+        VBox vBox = new VBox(menuBar, splitPane);
+        Scene scene = new Scene(vBox, 960, 600);
+
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public static void main(String[] args) {
+        Application.launch(args);
+    }
+}
 </code></pre>
 
+<h2>add gradle run task</h2>
+<p><img alt="" src="../images/Screenshot_20from_202020-01-05_2023-17-23.png" /></p>
+<p><img alt="" src="../images/Screenshot_20from_202020-01-05_2023-18-17.png" /></p>
+<h2>then run</h2>
+<p><img alt="" src="../images/Screenshot_20from_202020-01-05_2023-19-50.png" /></p>
+<p><img alt="" src="../images/Screenshot_20from_202020-01-05_2023-20-34.png" /></p>
 <hr />
-<p><a href="https://calvin.me/forward-ip-addresses-when-using-nginx-proxy/" title="Forward IP Addresses with NGINX Proxy">Forward IP Addresses with NGINX Proxy</a></p></div>
+<p><a href="https://openjfx.io/openjfx-docs/#IDE-Intellij" title="Getting Started with JavaFX 13">Getting Started with JavaFX 13</a>
+<a href="http://tutorials.jenkov.com/javafx/index.html" title="JavaFX Tutorial">JavaFX Tutorial</a></p></div>
         </div>
 
         <div id='commentList' class="ui comments">
@@ -186,8 +231,8 @@
             <br /><br /><br />
         </div>
     </div>
-    <input type='hidden' id='articleId' value="71418eb9837f35273adda7b73384c0cb" />
-    <input type='hidden' id='articleTitle' value="获取请求者的 IP - 当使用 Nginx 反向代理时" />
+    <input type='hidden' id='articleId' value="32ce99e7fdfff4ff87d0c58514f486b2" />
+    <input type='hidden' id='articleTitle' value="JavaFX Example" />
 </body>
 
 </html>

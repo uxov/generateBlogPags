@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width initial-scale=1'>
-    <title>获取请求者的 IP - 当使用 Nginx 反向代理时</title>
+    <title>CompletableFuture 中断任务</title>
 
     <link rel="stylesheet" href="../scripts/semantic.min.css">
     <link rel="stylesheet" href="../scripts/github.css">
@@ -123,47 +123,64 @@
                 </a>
             </div>
             <div class="ui divider"></div>
-            <div id="showPost"><p><em>2019-01-26</em></p>
-<h1>获取请求者的 IP - 当使用 Nginx 反向代理时</h1>
-<p>在 Java Web 应用中一般可以通过如下的代码来获取请求者的 IP：</p>
-<pre><code class="java">String ip = request.getRemoteAddr();
-</code></pre>
-
-<p>但当你的应用使用了 Nginx 反向代理后，上面的代码将不能获取请求者的 IP，获取到的 IP 为 Nginx 所在服务器的 IP。</p>
-<p>所以为了能获取到请求者的 IP，需要在 Nginx 的配置文件作以下设置：</p>
-<pre><code>server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-
-    server_name www.test.me;
-
-    ssl_certificate /etc/letsencrypt/live/test.me/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/test.me/privkey.pem;
-
-    # settting for get visitor's IP address
-    set_real_ip_from 127.0.0.1;
-    real_ip_header X-Real-IP;
-    real_ip_recursive on;
-        
-    location / {
-        # settting for get visitor's IP address
-        proxy_set_header  Host $host;
-        proxy_set_header  X-Real-IP $remote_addr;
-        proxy_set_header  X-Forwarded-Proto https;
-        proxy_set_header  X-Forwarded-For $remote_addr;
-        proxy_set_header  X-Forwarded-Host $remote_addr;
-        proxy_pass        http://127.0.0.1:8088;
+            <div id="showPost"><p><em>2020-01-05</em></p>
+<h1>CompletableFuture - Interrupt A Task</h1>
+<p><code>future.cancel(true)</code> can't interrupt a task</p>
+<pre><code class="java">public class Test {
+    public static void main(String[] args) {
+        CompletableFuture future = null;
+        try {
+            future = CompletableFuture.runAsync(() -&gt; {
+                int count = 0;
+                while (true) {
+                    System.out.println(&quot;run async - &quot; + count);
+                    count++;
+                }
+            });
+            future.get(1, TimeUnit.SECONDS);
+        } catch (TimeoutException te) {     //the code in loop continue running when timeout
+            te.printStackTrace();
+            future.cancel(true);    //doesn't work
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
-
 </code></pre>
 
-<p>最后在应用的代码中可以通过以下的方式来获取正确的 IP 地址：</p>
-<pre><code class="java">String ip = request().getHeader(&quot;X-Forwarded-For&quot;);
-</code></pre>
-
-<hr />
-<p><a href="https://calvin.me/forward-ip-addresses-when-using-nginx-proxy/" title="Forward IP Addresses with NGINX Proxy">Forward IP Addresses with NGINX Proxy</a></p></div>
+<p>The right way to interrupt a task:</p>
+<pre><code class="java">public class Test {
+    public static void main(String[] args) {
+        CompletableFuture future = null;
+        AtomicBoolean wait = new AtomicBoolean(true);
+        try {
+            future = CompletableFuture.runAsync(() -&gt; {
+                int count = 0;
+                while (wait.get()) {
+                    System.out.println(&quot;run async - &quot; + count);
+                    count++;
+                }
+            });
+            future.get(1, TimeUnit.SECONDS);
+        } catch (TimeoutException te) {
+            te.printStackTrace();
+            wait.set(false);    //terminate the loop
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre></div>
         </div>
 
         <div id='commentList' class="ui comments">
@@ -186,8 +203,8 @@
             <br /><br /><br />
         </div>
     </div>
-    <input type='hidden' id='articleId' value="71418eb9837f35273adda7b73384c0cb" />
-    <input type='hidden' id='articleTitle' value="获取请求者的 IP - 当使用 Nginx 反向代理时" />
+    <input type='hidden' id='articleId' value="dc0cdbef43515c6d8428ff27cf139595" />
+    <input type='hidden' id='articleTitle' value="CompletableFuture 中断任务" />
 </body>
 
 </html>
